@@ -1,5 +1,5 @@
 
-![TabbyEngine](/Resources/Logo/Tabby_Engine_Logo_And_Name_1024X256.png?raw=true "TabbyEngine")
+![TabbyEngine](/resources/logo/Tabby_Engine_Logo_And_Name_1024X256.png?raw=true "TabbyEngine")
 
 
 Simple game engine written in C++.
@@ -25,8 +25,10 @@ External Dependencies
   - stb_image
   - yaml-cpp
   - msdf-atlas-gen
+  - fastgltf
   - tracy profiler
   - OpenAL-Soft 
+  - gtk4 (just on Linux) 
 
 Supported Graphics Apis
 -----------------------
@@ -36,10 +38,10 @@ Supported Graphics Apis
 Supported Platforms
 -------------------
 - Linux
-- Windows (probably. not tested)
+- Windows (not tested)
 - MacOS
-- Web
-- Android
+- Web (not tested in a while)
+- Android (not tested in a while)
 
 Compiling
 ---------
@@ -51,7 +53,7 @@ For building web install emscriptem from their git repo. Installing from package
   - For Unix:  
 
     1. ```shell
-        git clone -b customRenderer https://github.com/tabdroid-1/TabbyEngine.git && mkdir TabbyEngine/build && cd TabbyEngine/build
+        git clone -b customRenderer-dev https://github.com/tabdroid-1/TabbyEngine.git && mkdir TabbyEngine/build && cd TabbyEngine/build
         ```
 
     2. ```shell
@@ -59,9 +61,15 @@ For building web install emscriptem from their git repo. Installing from package
         ```
     
   - For Windows:  
-    1. ```shell
-        Todo
-        ```
+    - mingw 
+     
+      1. ```shell
+         git clone https://github.com/tabdroid-1/MaineCoon.git && mkdir MaineCoon/build && cd MaineCoon/build
+          ```
+      2. ```shell
+         cmake -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_C_COMPILER=i686-w64-mingw32-gcc -DCMAKE_CXX_COMPILER=i686-w64-mingw32-g++ ..
+         make -j4
+          ```
 
 - For Web 
 
@@ -95,3 +103,4 @@ Special Thanks
 - Peppino Spaghetti
 - Soilder from TF2
 - 2008 Toyota Corolla
+- Bon

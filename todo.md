@@ -25,32 +25,21 @@ Todo
         - <s>Play SFX and delete when not needed. </s> Done 
         - <s>Audio streaming for long audios. </s> Done 
     - <s>Asset manager. </s> Done
-    - <s>Go balls deep in to ECS (ECS like in Bevy Engine)</s> idk. 
-    - Initial Level Editor work.
-    - Edit CMakeLists.txt files to load source files non-recursively.
+    - <s>Go balls deep in to ECS (ECS like in Bevy Engine)</s> kinda done since 20-06-2024_1 Alpha. 
+    - <s>Implement File Dialog to linux.</s> Done Since 02-07-2024_1 Alpha
     - Add font support to asset manager.
     - Fix OpenGL ES Text Shader. 
     - Clean up the code, add comments etc.
     - Multithreading
     - Create Application by reading a file. From a file named "tbconfig.(file format)" maybe.
-    - Renderer is shit
 
 
 - Low priority
-    - Plugins
     - Angel Script
     - Animation
     - Basic networking
     - Create pop-up showing error on release builds instead of just crashing without any info. 
-    <!-- - tbpf (TabbyPrefabFormat) format and Prefab editor. (kinda like level editor that generates tbpf format)  -->
-    <!--     - tbpf file will contain -->
-    <!--         - entity prefabs(player, npc, level elemets etc.) -->
-    <!--         - levels (basically compilation of prefabs) -->
-    <!--     - individual prefabs and/or level can be spawned. preferably each app should hold 1 tbpf file which will hold everything. -->
-    <!--     - encryption -->
-    <!--     - this is probably should be in a different repo -->
     - Vulkan.
-    - C++ reflection
 
 - Misc.
     - Create Documentation
@@ -60,4 +49,4 @@ Bugs
 ----
 - CurrentYFrame picks seamingly random coordinates from texture.
 - GLES 3.0 text shader not working.
-- Textures, Controllers, Sounds and Texts are not visible/working on web builds.
+- Controllers, Sounds and Texts are not visible/working on web builds.
