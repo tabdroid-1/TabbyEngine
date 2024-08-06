@@ -3,11 +3,10 @@
 
 
 Simple game engine written in C++.
-This engines main focus is compatibility for most New and old platforms.
+This engines main focus is compatibility for most new and old platforms.
 Engine is mainly for 2D games but has 3d elements. Further 3D support planned.
 
-In this engine you mostly do everything using code.
-There is Level editor planned since its hard to make levels using just code.
+In this engine you mostly do everything by just code.
 
 Engine architecture is based on Hazel engine.
 
@@ -53,7 +52,7 @@ For building web install emscriptem from their git repo. Installing from package
   - For Unix:  
 
     1. ```shell
-        git clone -b customRenderer-dev https://github.com/tabdroid-1/TabbyEngine.git && mkdir TabbyEngine/build && cd TabbyEngine/build
+        git clone https://github.com/tabdroid-1/TabbyEngine.git && mkdir TabbyEngine/build && cd TabbyEngine/build
         ```
 
     2. ```shell
@@ -74,7 +73,7 @@ For building web install emscriptem from their git repo. Installing from package
 - For Web 
 
   1. ```shell
-     git clone -b customRenderer https://github.com/tabdroid-1/TabbyEngine.git && mkdir TabbyEngine/build && cd TabbyEngine/build
+     git clone https://github.com/tabdroid-1/TabbyEngine.git && mkdir TabbyEngine/build && cd TabbyEngine/build
      ```
 
   2. ```shell
