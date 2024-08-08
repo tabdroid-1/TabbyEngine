@@ -1,5 +1,6 @@
 #include <Tabby/Core/Log/Log.h>
 
+#include <Tabby/Foundation/Types.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
@@ -36,5 +37,64 @@ void Log::Init()
     s_ClientLogger->set_level(spdlog::level::trace);
     s_ClientLogger->flush_on(spdlog::level::trace);
 }
-
 }
+
+// auto fmt::formatter<glm::vec<2, int>>::format(glm::vec<2, int> c, format_context& ctx) const -> format_context::iterator
+// {
+//     string_view name = fmt::format("X: {}  Y: {}", c.x, c.y);
+//     return formatter<string_view>::format(name, ctx);
+// }
+//
+// auto fmt::formatter<glm::vec<3, int>>::format(glm::vec<3, int> c, format_context& ctx) const -> format_context::iterator
+// {
+//     string_view name = fmt::format("X: {}  Y: {}  Z: {}", c.x, c.y, c.z);
+//     return formatter<string_view>::format(name, ctx);
+// }
+//
+// auto fmt::formatter<glm::vec<4, int>>::format(glm::vec<4, int> c, format_context& ctx) const -> format_context::iterator
+// {
+//     string_view name = fmt::format("X: {}  Y: {}  Z: {}  W: {}", c.x, c.y, c.z, c.w);
+//     return formatter<string_view>::format(name, ctx);
+// }
+//
+// auto fmt::formatter<glm::vec<2, uint32_t>>::format(glm::vec<2, uint32_t> c, format_context& ctx) const -> format_context::iterator
+// {
+//     string_view name = fmt::format("X: {}  Y: {}", c.x, c.y);
+//     return formatter<string_view>::format(name, ctx);
+// }
+//
+// auto fmt::formatter<glm::vec<3, uint32_t>>::format(glm::vec<3, uint32_t> c, format_context& ctx) const -> format_context::iterator
+// {
+//     string_view name = fmt::format("X: {}  Y: {}  Z: {}", c.x, c.y, c.z);
+//     return formatter<string_view>::format(name, ctx);
+// }
+//
+// auto fmt::formatter<glm::vec<4, uint32_t>>::format(glm::vec<4, uint32_t> c, format_context& ctx) const -> format_context::iterator
+// {
+//     string_view name = fmt::format("X: {}  Y: {}  Z: {}  W: {}", c.x, c.y, c.z, c.w);
+//     return formatter<string_view>::format(name, ctx);
+// }
+//
+// auto fmt::formatter<glm::vec2>::format(glm::vec2 c, format_context& ctx) const -> format_context::iterator
+// {
+//     string_view name = fmt::format("X: {}  Y: {}", c.x, c.y);
+//     return formatter<string_view>::format(name, ctx);
+// }
+//
+// auto fmt::formatter<glm::vec3>::format(glm::vec3 c, format_context& ctx) const -> format_context::iterator
+// {
+//     string_view name = fmt::format("X: {}  Y: {}  Z: {}", c.x, c.y, c.z);
+//     return formatter<string_view>::format(name, ctx);
+// }
+//
+// auto fmt::formatter<glm::vec4>::format(glm::vec4 c, format_context& ctx) const -> format_context::iterator
+// {
+//     string_view name = fmt::format("X: {}  Y: {}  Z: {}  W: {}", c.x, c.y, c.z, c.w);
+//     return formatter<string_view>::format(name, ctx);
+// }
+//
+// auto fmt::formatter<glm::quat>::format(glm::quat c, format_context& ctx) const -> format_context::iterator
+// {
+//     string_view name = fmt::format("X: {}  Y: {}  Z: {}  W: {}", c.x, c.y, c.z, c.w);
+//     return formatter<string_view>::format(name, ctx);
+// }

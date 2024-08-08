@@ -37,7 +37,7 @@ Input::Input()
                 tempCont.name = SDL_JoystickName((SDL_Joystick*)tempCont.SDL_Gamepad);
             }
             tempCont.name += '\0';
-            gamepads[i] = tempCont;
+            m_Gamepads[i] = tempCont;
         } else
             TB_CORE_WARN("Unable to open game controller [ERROR: {0}]", SDL_GetError());
     }
@@ -67,7 +67,7 @@ void Input::RefreshGamepads()
                 tempCont.name = SDL_JoystickName((SDL_Joystick*)tempCont.SDL_Gamepad);
             }
             tempCont.name += '\0';
-            s_Instance->gamepads[i] = tempCont;
+            s_Instance->m_Gamepads[i] = tempCont;
         } else
             TB_CORE_WARN("Unable to open game controller [ERROR: {0}]", SDL_GetError());
     }
@@ -75,6 +75,6 @@ void Input::RefreshGamepads()
 
 const GamepadInfo& Input::GetGamepadInfo(int index)
 {
-    return s_Instance->gamepads[index];
+    return s_Instance->m_Gamepads[index];
 }
 }

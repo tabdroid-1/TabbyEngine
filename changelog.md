@@ -1,3 +1,10 @@
+Version: 08-08-2024_1 Alpha
+Changes:
+- Added mouse delta to Input. 
+- Added ability to pring vectors matrices and quaternions. 
+
+--------------------------------------------------------------------------------------
+
 Version: 06-08-2024_3 Alpha
 Changes:
 - Removed Plugin. 

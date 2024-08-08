@@ -22,14 +22,12 @@ bool Input::IsMouseButtonPressed(const MouseCode button)
     return (buttons & SDL_BUTTON(static_cast<int>(button))) != 0;
 }
 
-// glm::vec2 Input::GetMouseScroll()
-// {
-//     int x, y;
-//     // SDL_GetMouse;
-//     return { static_cast<float>(x), static_cast<float>(y) };
-// }
+Vector2 Input::GetMouseScrollDelta()
+{
+    return s_Instance->m_MouseScrollDelta;
+}
 
-glm::vec2 Input::GetMousePosition()
+Vector2 Input::GetMousePosition()
 {
     int x, y;
     SDL_GetMouseState(&x, &y);
@@ -56,19 +54,19 @@ float Input::GetGamepadAxis(int index, GamepadAxis axis)
 {
     float result = 0.0f;
 
-    if (!Input::Get()->gamepads[index].SDL_Gamepad)
+    if (!s_Instance->m_Gamepads[index].SDL_Gamepad)
         return result;
 
-    if (Input::Get()->gamepads[index].isGamepad) {
-        result = SDL_GameControllerGetAxis((SDL_GameController*)Input::Get()->gamepads[index].SDL_Gamepad, static_cast<SDL_GameControllerAxis>(axis));
+    if (s_Instance->m_Gamepads[index].isGamepad) {
+        result = SDL_GameControllerGetAxis((SDL_GameController*)s_Instance->m_Gamepads[index].SDL_Gamepad, static_cast<SDL_GameControllerAxis>(axis));
     } else {
-        result = SDL_JoystickGetAxis((SDL_Joystick*)Input::Get()->gamepads[index].SDL_Gamepad, axis);
+        result = SDL_JoystickGetAxis((SDL_Joystick*)s_Instance->m_Gamepads[index].SDL_Gamepad, axis);
     }
 
     // Dividing to clamp it to be between -1 and 1
     result /= 32767.0f;
 
-    if (Math::Abs(result) >= Input::Get()->gamepads[index].deadZone)
+    if (Math::Abs(result) >= s_Instance->m_Gamepads[index].deadZone)
         return result;
     else
         return 0;
@@ -76,7 +74,7 @@ float Input::GetGamepadAxis(int index, GamepadAxis axis)
 
 bool Input::IsGamepadButtonPressed(int index, GamepadButtons button)
 {
-    if (!Input::Get()->gamepads[index].SDL_Gamepad)
+    if (!s_Instance->m_Gamepads[index].SDL_Gamepad)
         return false;
 
     if (button == Gamepad::Buttons::GAMEPAD_BUTTON_LEFT_TRIGGER)
@@ -84,10 +82,10 @@ bool Input::IsGamepadButtonPressed(int index, GamepadButtons button)
     else if (button == Gamepad::Buttons::GAMEPAD_BUTTON_RIGHT_TRIGGER)
         return GetGamepadAxis(index, Gamepad::Axis::GAMEPAD_AXIS_RIGHT_TRIGGER) > 0 ? true : false;
 
-    if (Input::Get()->gamepads[index].isGamepad)
-        return SDL_GameControllerGetButton((SDL_GameController*)Input::Get()->gamepads[index].SDL_Gamepad, static_cast<SDL_GameControllerButton>(button));
+    if (s_Instance->m_Gamepads[index].isGamepad)
+        return SDL_GameControllerGetButton((SDL_GameController*)s_Instance->m_Gamepads[index].SDL_Gamepad, static_cast<SDL_GameControllerButton>(button));
     else
-        return SDL_JoystickGetButton((SDL_Joystick*)Input::Get()->gamepads[index].SDL_Gamepad, button);
+        return SDL_JoystickGetButton((SDL_Joystick*)s_Instance->m_Gamepads[index].SDL_Gamepad, button);
 }
 
 }

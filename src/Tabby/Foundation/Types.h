@@ -12,17 +12,9 @@ using BitMask = uint64_t;
 using Flag = uint64_t;
 using AssetHandle = UUID;
 
-// struct MiscData {
-//     byte* data;
-//     uint32_t size;
-// };
-
-// using RGB32         = glm::u8vec3;
-// using RGBA32        = glm::u8vec4;
-
-using IntVector2 = glm::vec<2, int32_t>;
-using IntVector3 = glm::vec<3, int32_t>;
-using IntVector4 = glm::vec<4, int32_t>;
+using IntVector2 = glm::vec<2, int>;
+using IntVector3 = glm::vec<3, int>;
+using IntVector4 = glm::vec<4, int>;
 
 using UIntVector2 = glm::vec<2, uint32_t>;
 using UIntVector3 = glm::vec<3, uint32_t>;

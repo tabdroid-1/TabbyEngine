@@ -5,9 +5,7 @@
 #include "Tabby/Core/Input/KeyCodes.h"
 #include "Tabby/Core/Input/MouseCodes.h"
 #include <Tabby/Core/Events/MouseEvent.h>
-#include <Tabby/Core/Application.h>
-
-#include <glm/glm.hpp>
+#include <Tabby/Foundation/Types.h>
 
 struct _SDL_Joystick;
 typedef struct _SDL_Joystick SDL_Joystick;
@@ -28,11 +26,10 @@ class Input {
 public:
     static void Init();
 
-    static Input* Get() { return s_Instance; }
-
     static bool IsKeyPressed(KeyCode key);
     static bool IsMouseButtonPressed(MouseCode button);
-    static glm::vec2 GetMousePosition();
+    static Vector2 GetMousePosition();
+    static Vector2 GetMouseScrollDelta();
     static float GetMouseX();
     static float GetMouseY();
 
@@ -45,7 +42,8 @@ public:
 
 private:
     Input();
-    GamepadInfo gamepads[MAX_GAMEPADS];
+    GamepadInfo m_Gamepads[MAX_GAMEPADS];
+    Vector2 m_MouseScrollDelta;
 
 private:
     static Input* s_Instance;

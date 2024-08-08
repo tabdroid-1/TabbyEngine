@@ -1,3 +1,4 @@
+#include <Tabby/Core/Application.h>
 #include "Tabby/Renderer/Renderer.h"
 #include <Tabby/Core/Input/Input.h>
 
@@ -92,6 +93,7 @@ void Application::OnEvent(Event& e)
     EventDispatcher dispatcher(e);
     dispatcher.Dispatch<WindowCloseEvent>(TB_BIND_EVENT_FN(Application::OnWindowClose));
     dispatcher.Dispatch<WindowResizeEvent>(TB_BIND_EVENT_FN(Application::OnWindowResize));
+    dispatcher.Dispatch<MouseScrolledEvent>(TB_BIND_EVENT_FN(Application::OnMouseScroll));
 
     for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it) {
         if (e.Handled)
@@ -137,6 +139,7 @@ void Application::Run()
             m_ImGuiLayer->End();
         }
 
+        Input::s_Instance->m_MouseScrollDelta = { 0, 0 };
         m_Window->OnUpdate();
 
         // Framerate limiter. this will do nothing if maxFPS is 0.
@@ -170,6 +173,12 @@ bool Application::OnWindowResize(WindowResizeEvent& e)
     m_Minimized = false;
     Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
 
+    return false;
+}
+
+bool Application::OnMouseScroll(MouseScrolledEvent& e)
+{
+    Input::s_Instance->m_MouseScrollDelta = { e.GetXOffset(), e.GetYOffset() };
     return false;
 }
 

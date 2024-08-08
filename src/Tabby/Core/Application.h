@@ -73,6 +73,7 @@ public:
 private:
     bool OnWindowClose(WindowCloseEvent& e);
     bool OnWindowResize(WindowResizeEvent& e);
+    bool OnMouseScroll(MouseScrolledEvent& e);
 
     void ExecuteMainThreadQueue();
 

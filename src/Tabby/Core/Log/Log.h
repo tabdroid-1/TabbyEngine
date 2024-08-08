@@ -2,6 +2,7 @@
 
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
+#include <Tabby/Foundation/Types.h>
 
 #include "Tabby/Core/Base.h"
 
@@ -27,6 +28,33 @@ private:
     static Shared<spdlog::logger> s_ClientLogger;
 };
 }
+
+template <glm::length_t L, typename T, glm::qualifier Q>
+struct fmt::formatter<glm::vec<L, T, Q>> : formatter<string_view> {
+
+    auto format(glm::vec<L, T, Q> vec, format_context& ctx) const -> format_context::iterator
+    {
+        return formatter<string_view>::format(glm::to_string(vec), ctx);
+    }
+};
+
+template <glm::length_t C, glm::length_t R, typename T, glm::qualifier Q>
+struct fmt::formatter<glm::mat<C, R, T, Q>> : formatter<string_view> {
+
+    auto format(glm::mat<C, R, T, Q> mat, format_context& ctx) const -> format_context::iterator
+    {
+        return formatter<string_view>::format(glm::to_string(mat), ctx);
+    }
+};
+
+template <typename T, glm::qualifier Q>
+struct fmt::formatter<glm::qua<T, Q>> : formatter<string_view> {
+
+    auto format(glm::qua<T, Q> qua, format_context& ctx) const -> format_context::iterator
+    {
+        return formatter<string_view>::format(glm::to_string(qua), ctx);
+    }
+};
 
 template <typename OStream, glm::length_t L, typename T, glm::qualifier Q>
 inline OStream& operator<<(OStream& os, const glm::vec<L, T, Q>& vector)
