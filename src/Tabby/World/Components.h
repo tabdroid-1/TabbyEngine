@@ -114,29 +114,9 @@ struct SoundComponent {
     SoundComponent(const SoundComponent&) = default;
 };
 
-// Forward declaration
-class ScriptableEntity;
-
-struct NativeScriptComponent {
-    ScriptableEntity* Instance = nullptr;
-
-    ScriptableEntity* (*InstantiateScript)();
-    void (*DestroyScript)(NativeScriptComponent*);
-
-    template <typename T>
-    void Bind()
-    {
-        InstantiateScript = []() {
-            return static_cast<ScriptableEntity*>(new T());
-        };
-        DestroyScript = [](NativeScriptComponent* nsc) {
-            delete nsc->Instance;
-            nsc->Instance = nullptr;
-        };
-    }
-};
-
 // Physics
+
+struct ContactCallback;
 
 struct Rigidbody2DComponent {
     enum class BodyType { Static = 0,
@@ -148,6 +128,9 @@ struct Rigidbody2DComponent {
 
     bool FixedRotation;
     bool QueuedForInitialization;
+    std::function<void(ContactCallback contact)> OnCollisionEnterCallback;
+    std::function<void(ContactCallback contact)> OnCollisionExitCallback;
+    std::function<bool(ContactCallback contact)> OnPreSolve;
 
     Rigidbody2DComponent() = default;
     Rigidbody2DComponent(const Rigidbody2DComponent&) = default;
@@ -405,7 +388,7 @@ struct ComponentGroup {
 };
 
 using AllComponents = ComponentGroup<TransformComponent, SpriteRendererComponent,
-    CircleRendererComponent, CameraComponent, SoundComponent, HierarchyNodeComponent, NativeScriptComponent,
+    CircleRendererComponent, CameraComponent, SoundComponent, HierarchyNodeComponent,
     Rigidbody2DComponent, BoxCollider2DComponent, CircleCollider2DComponent, CapsuleCollider2DComponent, TextComponent>;
 
 } // namespace Tabby

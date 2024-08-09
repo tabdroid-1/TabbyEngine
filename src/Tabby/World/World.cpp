@@ -17,136 +17,138 @@ World::World()
 
 void World::Init()
 {
-    if (!s_Instance)
+    if (!s_Instance) {
+
         s_Instance = new World();
 
-    AddSystem(Schedule::PreUpdate, [](entt::registry&) {
-        // Apply transform to children
-        TB_PROFILE_SCOPE_NAME("World::PreUpdate::TransformUpdate");
-        auto view = World::GetRegistry().view<TransformComponent>();
+        AddSystem(Schedule::PreUpdate, [](entt::registry&) {
+            // Apply transform to children
+            TB_PROFILE_SCOPE_NAME("World::PreUpdate::TransformUpdate");
+            auto view = World::GetRegistry().view<TransformComponent>();
 
-        for (auto entity : view) {
-            auto& hierarchy_node_component = World::GetRegistry().get<HierarchyNodeComponent>(entity);
-            auto& transform = World::GetRegistry().get<TransformComponent>(entity);
+            for (auto entity : view) {
+                auto& hierarchy_node_component = World::GetRegistry().get<HierarchyNodeComponent>(entity);
+                auto& transform = World::GetRegistry().get<TransformComponent>(entity);
 
-            Matrix4 rotation = glm::toMat4(glm::quat(glm::radians((Vector3&)transform.Rotation)));
-            transform.TransformMatrix = glm::translate(Matrix4(1.0f), (Vector3&)transform.Translation) * rotation * glm::scale(Matrix4(1.0f), (Vector3&)transform.Scale);
+                Matrix4 rotation = glm::toMat4(Quaternion(glm::radians((Vector3&)transform.Rotation)));
+                transform.TransformMatrix = glm::translate(Matrix4(1.0f), (Vector3&)transform.Translation) * rotation * glm::scale(Matrix4(1.0f), (Vector3&)transform.Scale);
 
-            Matrix4 localRotation = glm::toMat4(glm::quat(glm::radians((Vector3&)transform.LocalRotation)));
-            transform.LocalTransformMatrix = glm::translate(Matrix4(1.0f), (Vector3&)transform.LocalTranslation) * localRotation * glm::scale(Matrix4(1.0f), (Vector3&)transform.LocalScale);
+                Matrix4 localRotation = glm::toMat4(Quaternion(glm::radians((Vector3&)transform.LocalRotation)));
+                transform.LocalTransformMatrix = glm::translate(Matrix4(1.0f), (Vector3&)transform.LocalTranslation) * localRotation * glm::scale(Matrix4(1.0f), (Vector3&)transform.LocalScale);
 
-            for (auto& child : hierarchy_node_component.Children) {
-                auto& childTransform = World::GetRegistry().get<TransformComponent>(child.second);
-                childTransform.ApplyTransform(transform.GetTransform() * childTransform.GetLocalTransform());
-            }
+                for (auto& child : hierarchy_node_component.Children) {
+                    auto& childTransform = World::GetRegistry().get<TransformComponent>(child.second);
+                    childTransform.ApplyTransform(transform.GetTransform() * childTransform.GetLocalTransform());
+                }
 
-            if (World::GetRegistry().any_of<Rigidbody2DComponent>(entity)) {
-                auto& rb2d = World::GetRegistry().get<Rigidbody2DComponent>(entity);
+                if (World::GetRegistry().any_of<Rigidbody2DComponent>(entity)) {
+                    auto& rb2d = World::GetRegistry().get<Rigidbody2DComponent>(entity);
 
-                if (B2_IS_NON_NULL(rb2d.RuntimeBodyId))
-                    b2Body_SetTransform(rb2d.RuntimeBodyId, { transform.Translation.x, transform.Translation.y }, b2MakeRot(Math::DEG2RAD * transform.Rotation.z));
-            }
-        };
-    });
-
-    AddSystem(Schedule::PreUpdate, [](entt::registry&) {
-        TB_PROFILE_SCOPE_NAME("World::PreUpdate::UpdatePhysics2DWorld");
-        const int32_t subStepCount = 6;
-        Physisc2D::UpdateWorld();
-
-        // Retrieve transform from Box2D
-        auto view = World::GetRegistry().view<Rigidbody2DComponent>();
-        for (auto e : view) {
-            Entity entity = { e };
-            auto& transform = entity.GetComponent<TransformComponent>();
-            auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
-
-            const auto& position = b2Body_GetPosition(rb2d.RuntimeBodyId);
-            transform.Translation.x = position.x;
-            transform.Translation.y = position.y;
-            transform.Rotation.z = Math::RAD2DEG * b2Rot_GetAngle(b2Body_GetRotation(rb2d.RuntimeBodyId));
-        }
-    });
-
-    AddSystem(Schedule::PostUpdate, [](entt::registry&) {
-        TB_PROFILE_SCOPE_NAME("World::PostUpdate::SetCurrentCamera");
-        auto view = World::GetRegistry().view<TransformComponent, CameraComponent>();
-        for (auto entity : view) {
-            auto [transform, camera] = view.get<TransformComponent, CameraComponent>(entity);
-
-            if (camera.Primary) {
-                World::SetCurrentCamera(&camera.Camera, &transform.GetTransform());
-                break;
-            }
-        }
-    });
-
-    AddSystem(Schedule::Draw, [](entt::registry&) {
-        TB_PROFILE_SCOPE_NAME("World::Draw::RenderCircle");
-        auto view = World::GetRegistry().view<TransformComponent, CircleRendererComponent>();
-        for (auto entity : view) {
-            auto [transform, circle] = view.get<TransformComponent, CircleRendererComponent>(entity);
-
-            Renderer2D::DrawCircle(transform.GetTransform(), circle.Color, circle.Thickness, circle.Fade, (int)entity);
-        }
-    });
-
-    AddSystem(Schedule::Draw, [](entt::registry&) {
-        TB_PROFILE_SCOPE_NAME("World::Draw::RenderCircle");
-        auto view = World::GetRegistry().view<TransformComponent, CircleRendererComponent>();
-        for (auto entity : view) {
-            auto [transform, circle] = view.get<TransformComponent, CircleRendererComponent>(entity);
-
-            Renderer2D::DrawCircle(transform.GetTransform(), circle.Color, circle.Thickness, circle.Fade, (int)entity);
-        }
-    });
-
-    AddSystem(Schedule::Draw, [](entt::registry&) {
-        TB_PROFILE_SCOPE_NAME("World::Draw::RenderSprites");
-
-        World::GetRegistry().sort<SpriteRendererComponent>([](const auto& lhs, const auto& rhs) {
-            return lhs.renderOrder < rhs.renderOrder;
+                    if (B2_IS_NON_NULL(rb2d.RuntimeBodyId))
+                        b2Body_SetTransform(rb2d.RuntimeBodyId, { transform.Translation.x, transform.Translation.y }, b2MakeRot(Math::DEG2RAD * transform.Rotation.z));
+                }
+            };
         });
 
-        auto sprite_view = World::GetRegistry().view<SpriteRendererComponent>();
+        AddSystem(Schedule::PreUpdate, [](entt::registry&) {
+            TB_PROFILE_SCOPE_NAME("World::PreUpdate::UpdatePhysics2DWorld");
+            const int32_t subStepCount = 6;
+            Physisc2D::UpdateWorld();
 
-        for (const entt::entity entity : sprite_view) {
-            auto transform = World::GetRegistry().get<TransformComponent>(entity);
-            auto sprite = World::GetRegistry().get<SpriteRendererComponent>(entity);
+            // Retrieve transform from Box2D
+            auto view = World::GetRegistry().view<Rigidbody2DComponent>();
+            for (auto e : view) {
+                Entity entity = { e };
+                auto& transform = entity.GetComponent<TransformComponent>();
+                auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
 
-            Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
-        }
-    });
-
-    AddSystem(Schedule::Draw, [](entt::registry&) {
-        TB_PROFILE_SCOPE_NAME("World::Draw::RenderGLTF");
-        auto view = World::GetRegistry().view<TransformComponent, MeshComponent>();
-        for (auto entity : view) {
-            auto [transform, mC] = view.get<TransformComponent, MeshComponent>(entity);
-
-            if (mC.m_Mesh) {
-                mC.m_Mesh->SetTransform(transform.GetTransform());
-                mC.m_Mesh->Render();
+                const auto& position = b2Body_GetPosition(rb2d.RuntimeBodyId);
+                transform.Translation.x = position.x;
+                transform.Translation.y = position.y;
+                transform.Rotation.z = Math::RAD2DEG * b2Rot_GetAngle(b2Body_GetRotation(rb2d.RuntimeBodyId));
             }
-        }
-    });
+        });
 
-    AddSystem(Schedule::Draw, [](entt::registry&) {
-        TB_PROFILE_SCOPE_NAME("World::Draw::RenderText");
+        AddSystem(Schedule::PostUpdate, [](entt::registry&) {
+            TB_PROFILE_SCOPE_NAME("World::PostUpdate::SetCurrentCamera");
+            auto view = World::GetRegistry().view<TransformComponent, CameraComponent>();
+            for (auto entity : view) {
+                auto [transform, camera] = view.get<TransformComponent, CameraComponent>(entity);
 
-        auto view = GetRegistry().view<TransformComponent, TextComponent>();
-        for (auto entity : view) {
-            auto [transform, text] = view.get<TransformComponent, TextComponent>(entity);
+                if (camera.Primary) {
+                    World::SetCurrentCamera(&camera.Camera, &transform.GetTransform());
+                    break;
+                }
+            }
+        });
 
-            Renderer2D::DrawString(text.TextString, transform.GetTransform(), text, (int)entity);
-        }
-    });
+        AddSystem(Schedule::Draw, [](entt::registry&) {
+            TB_PROFILE_SCOPE_NAME("World::Draw::RenderCircle");
+            auto view = World::GetRegistry().view<TransformComponent, CircleRendererComponent>();
+            for (auto entity : view) {
+                auto [transform, circle] = view.get<TransformComponent, CircleRendererComponent>(entity);
 
-    AddSystem(Schedule::Draw, [](entt::registry&) {
-        TB_PROFILE_SCOPE_NAME("World::OnUpdate::RenderScene::DebugDraw");
+                Renderer2D::DrawCircle(transform.GetTransform(), circle.Color, circle.Thickness, circle.Fade, (int)entity);
+            }
+        });
 
-        Debug::ProcessDrawCalls();
-    });
+        AddSystem(Schedule::Draw, [](entt::registry&) {
+            TB_PROFILE_SCOPE_NAME("World::Draw::RenderCircle");
+            auto view = World::GetRegistry().view<TransformComponent, CircleRendererComponent>();
+            for (auto entity : view) {
+                auto [transform, circle] = view.get<TransformComponent, CircleRendererComponent>(entity);
+
+                Renderer2D::DrawCircle(transform.GetTransform(), circle.Color, circle.Thickness, circle.Fade, (int)entity);
+            }
+        });
+
+        AddSystem(Schedule::Draw, [](entt::registry&) {
+            TB_PROFILE_SCOPE_NAME("World::Draw::RenderSprites");
+
+            World::GetRegistry().sort<SpriteRendererComponent>([](const auto& lhs, const auto& rhs) {
+                return lhs.renderOrder < rhs.renderOrder;
+            });
+
+            auto sprite_view = World::GetRegistry().view<SpriteRendererComponent>();
+
+            for (const entt::entity entity : sprite_view) {
+                auto transform = World::GetRegistry().get<TransformComponent>(entity);
+                auto sprite = World::GetRegistry().get<SpriteRendererComponent>(entity);
+
+                Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
+            }
+        });
+
+        AddSystem(Schedule::Draw, [](entt::registry&) {
+            TB_PROFILE_SCOPE_NAME("World::Draw::RenderGLTF");
+            auto view = World::GetRegistry().view<TransformComponent, MeshComponent>();
+            for (auto entity : view) {
+                auto [transform, mC] = view.get<TransformComponent, MeshComponent>(entity);
+
+                if (mC.m_Mesh) {
+                    mC.m_Mesh->SetTransform(transform.GetTransform());
+                    mC.m_Mesh->Render();
+                }
+            }
+        });
+
+        AddSystem(Schedule::Draw, [](entt::registry&) {
+            TB_PROFILE_SCOPE_NAME("World::Draw::RenderText");
+
+            auto view = GetRegistry().view<TransformComponent, TextComponent>();
+            for (auto entity : view) {
+                auto [transform, text] = view.get<TransformComponent, TextComponent>(entity);
+
+                Renderer2D::DrawString(text.TextString, transform.GetTransform(), text, (int)entity);
+            }
+        });
+
+        AddSystem(Schedule::Draw, [](entt::registry&) {
+            TB_PROFILE_SCOPE_NAME("World::OnUpdate::RenderScene::DebugDraw");
+
+            Debug::ProcessDrawCalls();
+        });
+    }
 }
 
 template <typename... Component>
@@ -255,13 +257,6 @@ void World::DestroyEntity(Entity entity)
         }
     }
 
-    if (entity.HasComponent<NativeScriptComponent>()) {
-
-        auto& nsc = entity.GetComponent<NativeScriptComponent>();
-
-        nsc.DestroyScript(&nsc);
-    }
-
     auto& hc = entity.GetComponent<HierarchyNodeComponent>();
     auto& tc = entity.GetComponent<TransformComponent>();
     auto& id_component = entity.GetComponent<IDComponent>();
@@ -297,13 +292,6 @@ void World::DestroyEntityWithChildren(Entity entity)
             b2DestroyBody(rb2d.RuntimeBodyId);
             rb2d.RuntimeBodyId = b2_nullBodyId;
         }
-    }
-
-    if (entity.HasComponent<NativeScriptComponent>()) {
-
-        auto& nsc = entity.GetComponent<NativeScriptComponent>();
-
-        nsc.DestroyScript(&nsc);
     }
 
     IDComponent uuid_component = entity.GetComponent<IDComponent>();
@@ -358,13 +346,11 @@ void World::OnStart()
 {
     TB_PROFILE_SCOPE_NAME("World::OnStart");
 
-    if (!s_Instance)
-        s_Instance = new World();
+    Init();
 
     s_Instance->m_IsRunning = true;
 
-    Vector2 gravity(0.0f, -20.8f);
-    Physisc2D::InitWorld(gravity);
+    Physisc2D::Init();
 
     for (const auto& preStartup : s_Instance->m_PreStartupSystems)
         preStartup(s_Instance->m_EntityRegistry);
@@ -522,11 +508,6 @@ void World::OnComponentAdded<CircleRendererComponent>(Entity entity, CircleRende
 
 template <>
 void World::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component)
-{
-}
-
-template <>
-void World::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component)
 {
 }
 

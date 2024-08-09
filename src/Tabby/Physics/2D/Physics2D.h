@@ -12,31 +12,35 @@ public:
     Physisc2D();
     ~Physisc2D();
 
-    static void InitWorld(glm::vec2& gravity);
+    static void Init();
+    static void Init(const Vector2& gravity);
     static void UpdateWorld();
 
     static uint8_t GetSubstepCount();
     static void SetSubstepCount(uint8_t substepCount);
 
-    static RaycastHit2D RayCast(const glm::vec2& origin, const glm::vec2& direction, float distance, RaycastFilter2D raycastFilter, int minDepth, int maxDepth);
-    static RaycastHit2D RayCast(const glm::vec2& origin, const glm::vec2& direction, float distance, RaycastFilter2D raycastFilter);
-    static RaycastHit2D RayCast(const glm::vec2& origin, const glm::vec2& direction, float distance);
-    static RaycastHit2D RayCast(const glm::vec2& origin, const glm::vec2& direction);
+    static Vector2 GetGravity();
+    static void SetGravity(Vector2 gravity);
 
-    static RaycastHit2D BoxCast(const glm::vec2& boxSize, const glm::vec2& origin, const glm::vec2& direction, float distance, RaycastFilter2D raycastFilter, int minDepth, int maxDepth);
-    static RaycastHit2D BoxCast(const glm::vec2& boxSize, const glm::vec2& origin, const glm::vec2& direction, float distance, RaycastFilter2D raycastFilter);
-    static RaycastHit2D BoxCast(const glm::vec2& boxSize, const glm::vec2& origin, const glm::vec2& direction, float distance);
-    static RaycastHit2D BoxCast(const glm::vec2& boxSize, const glm::vec2& origin, const glm::vec2& direction);
+    static RaycastHit2D RayCast(const Vector2& origin, const Vector2& direction, float distance, RaycastFilter2D raycastFilter, int minDepth, int maxDepth);
+    static RaycastHit2D RayCast(const Vector2& origin, const Vector2& direction, float distance, RaycastFilter2D raycastFilter);
+    static RaycastHit2D RayCast(const Vector2& origin, const Vector2& direction, float distance);
+    static RaycastHit2D RayCast(const Vector2& origin, const Vector2& direction);
 
-    static RaycastHit2D CapsuleCast(const glm::vec2& point1, const glm::vec2& point2, float radius, const glm::vec2& origin, const glm::vec2& direction, float distance, RaycastFilter2D raycastFilter, int minDepth, int maxDepth);
-    static RaycastHit2D CapsuleCast(const glm::vec2& point1, const glm::vec2& point2, float radius, const glm::vec2& origin, const glm::vec2& direction, float distance, RaycastFilter2D raycastFilter);
-    static RaycastHit2D CapsuleCast(const glm::vec2& point1, const glm::vec2& point2, float radius, const glm::vec2& origin, const glm::vec2& direction, float distance);
-    static RaycastHit2D CapsuleCast(const glm::vec2& point1, const glm::vec2& point2, float radius, const glm::vec2& origin, const glm::vec2& direction);
+    static RaycastHit2D BoxCast(const Vector2& boxSize, const Vector2& origin, const Vector2& direction, float distance, RaycastFilter2D raycastFilter, int minDepth, int maxDepth);
+    static RaycastHit2D BoxCast(const Vector2& boxSize, const Vector2& origin, const Vector2& direction, float distance, RaycastFilter2D raycastFilter);
+    static RaycastHit2D BoxCast(const Vector2& boxSize, const Vector2& origin, const Vector2& direction, float distance);
+    static RaycastHit2D BoxCast(const Vector2& boxSize, const Vector2& origin, const Vector2& direction);
 
-    static RaycastHit2D CircleCast(float radius, const glm::vec2& origin, const glm::vec2& direction, float distance, RaycastFilter2D raycastFilter, int minDepth, int maxDepth);
-    static RaycastHit2D CircleCast(float radius, const glm::vec2& origin, const glm::vec2& direction, float distance, RaycastFilter2D raycastFilter);
-    static RaycastHit2D CircleCast(float radius, const glm::vec2& origin, const glm::vec2& direction, float distance);
-    static RaycastHit2D CircleCast(float radius, const glm::vec2& origin, const glm::vec2& direction);
+    static RaycastHit2D CapsuleCast(const Vector2& point1, const Vector2& point2, float radius, const Vector2& origin, const Vector2& direction, float distance, RaycastFilter2D raycastFilter, int minDepth, int maxDepth);
+    static RaycastHit2D CapsuleCast(const Vector2& point1, const Vector2& point2, float radius, const Vector2& origin, const Vector2& direction, float distance, RaycastFilter2D raycastFilter);
+    static RaycastHit2D CapsuleCast(const Vector2& point1, const Vector2& point2, float radius, const Vector2& origin, const Vector2& direction, float distance);
+    static RaycastHit2D CapsuleCast(const Vector2& point1, const Vector2& point2, float radius, const Vector2& origin, const Vector2& direction);
+
+    static RaycastHit2D CircleCast(float radius, const Vector2& origin, const Vector2& direction, float distance, RaycastFilter2D raycastFilter, int minDepth, int maxDepth);
+    static RaycastHit2D CircleCast(float radius, const Vector2& origin, const Vector2& direction, float distance, RaycastFilter2D raycastFilter);
+    static RaycastHit2D CircleCast(float radius, const Vector2& origin, const Vector2& direction, float distance);
+    static RaycastHit2D CircleCast(float radius, const Vector2& origin, const Vector2& direction);
 
     static b2WorldId GetPhysicsWorld();
 

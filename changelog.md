@@ -1,3 +1,13 @@
+Version: 09-08-2024_1 Alpha
+Changes:
+- Added resources. It holds structs and there can be one of same type at a time. 
+- Made World::Init() function private and now you have to just run World::OnStart().
+- Added way to set gravity after initialization of Physics2D.
+- Nuked NativeSctiptComponent out of existence.
+- Added way to set body touch event callback and presolve function in Rigidbody2DComponent. 
+
+--------------------------------------------------------------------------------------
+
 Version: 08-08-2024_1 Alpha
 Changes:
 - Added mouse delta to Input. 

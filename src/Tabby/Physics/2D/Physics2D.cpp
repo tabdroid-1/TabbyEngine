@@ -10,6 +10,9 @@
 
 namespace Tabby {
 
+static bool Physics2DPreSolve(b2ShapeId shapeIdA, b2ShapeId shapeIdB, b2Manifold* manifold, void* context);
+static bool Physics2DPostSolve(b2ShapeId shapeIdA, b2ShapeId shapeIdB, b2Manifold* manifold, void* context);
+
 Physisc2D* Physisc2D::s_Instance = nullptr;
 
 Physisc2D::Physisc2D()
@@ -26,19 +29,30 @@ Physisc2D::~Physisc2D()
     m_PhysicsWorld = b2_nullWorldId;
 }
 
-void Physisc2D::InitWorld(glm::vec2& gravity)
+void Physisc2D::Init()
 {
     if (!s_Instance)
         s_Instance = new Physisc2D();
 
-    // Check if the scene is different or if the world needs reinitialization
+    if (B2_IS_NULL(s_Instance->m_PhysicsWorld)) {
+
+        b2WorldDef worldDef = b2DefaultWorldDef();
+        worldDef.gravity = { 0.0f, -9.81f };
+        s_Instance->m_PhysicsWorld = b2CreateWorld(&worldDef);
+        b2World_SetPreSolveCallback(s_Instance->m_PhysicsWorld, Physics2DPreSolve, nullptr);
+    }
+}
+
+void Physisc2D::Init(const Vector2& gravity)
+{
+    if (!s_Instance)
+        s_Instance = new Physisc2D();
+
     if (B2_IS_NULL(s_Instance->m_PhysicsWorld)) {
 
         b2WorldDef worldDef = b2DefaultWorldDef();
         worldDef.gravity = { gravity.x, gravity.y };
         s_Instance->m_PhysicsWorld = b2CreateWorld(&worldDef);
-    } else {
-        b2World_SetGravity(s_Instance->m_PhysicsWorld, { gravity.x, gravity.y });
     }
 }
 
@@ -48,7 +62,7 @@ void Physisc2D::UpdateWorld()
     ProcessShapeInitQueue();
     ProcessShapeUpdateQueue();
 
-    TB_CORE_ASSERT_TAGGED(s_Instance, "Physisc2D have to be initialized first!");
+    TB_CORE_ASSERT_TAGGED(s_Instance, "Physisc2D: Instance have to be initialized first!");
     b2World_Step(s_Instance->m_PhysicsWorld, Time::GetDeltaTime(), s_Instance->m_SubstepCount);
 
     ProcessEvents();
@@ -62,10 +76,28 @@ uint8_t Physisc2D::GetSubstepCount()
 void Physisc2D::SetSubstepCount(uint8_t substepCount)
 {
     if (substepCount < 1) {
-        TB_CORE_ERROR("Physics2D substepCount can not be lower than 1!");
+        TB_CORE_ERROR("Physics2D: SubstepCount can not be lower than 1!");
         return;
     }
     s_Instance->m_SubstepCount = substepCount;
+}
+
+Vector2 Physisc2D::GetGravity()
+{
+    Vector2 gravity;
+    if (B2_IS_NULL(s_Instance->m_PhysicsWorld)) {
+
+        const auto& b2grav = b2World_GetGravity(s_Instance->m_PhysicsWorld);
+        gravity = { b2grav.x, b2grav.y };
+    }
+    return gravity;
+}
+void Physisc2D::SetGravity(Vector2 gravity)
+{
+    if (B2_IS_NULL(s_Instance->m_PhysicsWorld))
+        b2World_SetGravity(s_Instance->m_PhysicsWorld, { gravity.x, gravity.y });
+    else
+        TB_CORE_WARN("Physisc2D: Physics world is null. Gravity is not set!");
 }
 
 b2WorldId Physisc2D::GetPhysicsWorld()
@@ -73,12 +105,12 @@ b2WorldId Physisc2D::GetPhysicsWorld()
     if (s_Instance && B2_IS_NON_NULL(s_Instance->m_PhysicsWorld))
         return s_Instance->m_PhysicsWorld;
     else {
-        TB_CORE_ERROR("Physics world is not initialized!");
+        TB_CORE_ERROR("Physics2D: Physics world is not initialized!");
         return b2_nullWorldId;
     }
 }
 
-RaycastHit2D Physisc2D::RayCast(const glm::vec2& origin, const glm::vec2& direction, float distance, RaycastFilter2D raycastFilter, int minDepth, int maxDepth)
+RaycastHit2D Physisc2D::RayCast(const Vector2& origin, const Vector2& direction, float distance, RaycastFilter2D raycastFilter, int minDepth, int maxDepth)
 {
     RaycastHit2D tempRayCastHit;
     tempRayCastHit.RaycastFilter = raycastFilter;
@@ -89,27 +121,26 @@ RaycastHit2D Physisc2D::RayCast(const glm::vec2& origin, const glm::vec2& direct
     b2Vec2 box2DDirection = { direction.x, direction.y };
     b2Vec2 box2DDestination = { direction.x * distance, direction.y * distance };
     b2World_CastRay(s_Instance->m_PhysicsWorld, box2DOrigin, box2DDestination, { raycastFilter.GetCollisionLayer(), raycastFilter.GetCollisionMask() }, fcn, &tempRayCastHit);
-    // b2World_RayCast(s_Instance->m_PhysicsWorld, box2DOrigin, box2DDestination, { raycastFilter.GetCollisionLayer(), raycastFilter.GetCollisionMask() }, fcn, &tempRayCastHit);
 
     return tempRayCastHit;
 }
 
-RaycastHit2D Physisc2D::RayCast(const glm::vec2& origin, const glm::vec2& direction, float distance, RaycastFilter2D raycastFilter)
+RaycastHit2D Physisc2D::RayCast(const Vector2& origin, const Vector2& direction, float distance, RaycastFilter2D raycastFilter)
 {
     return RayCast(origin, direction, distance, raycastFilter, 0, std::numeric_limits<int>::max());
 }
 
-RaycastHit2D Physisc2D::RayCast(const glm::vec2& origin, const glm::vec2& direction, float distance)
+RaycastHit2D Physisc2D::RayCast(const Vector2& origin, const Vector2& direction, float distance)
 {
     return RayCast(origin, direction, distance, RaycastFilter2D(), 0, std::numeric_limits<int>::max());
 }
 
-RaycastHit2D Physisc2D::RayCast(const glm::vec2& origin, const glm::vec2& direction)
+RaycastHit2D Physisc2D::RayCast(const Vector2& origin, const Vector2& direction)
 {
     return RayCast(origin, direction, 2000.0f, RaycastFilter2D(), 0, std::numeric_limits<int>::max());
 }
 
-RaycastHit2D Physisc2D::BoxCast(const glm::vec2& boxSize, const glm::vec2& origin, const glm::vec2& direction, float distance, RaycastFilter2D raycastFilter, int minDepth, int maxDepth)
+RaycastHit2D Physisc2D::BoxCast(const Vector2& boxSize, const Vector2& origin, const Vector2& direction, float distance, RaycastFilter2D raycastFilter, int minDepth, int maxDepth)
 {
     RaycastHit2D tempRayCastHit;
 
@@ -123,27 +154,26 @@ RaycastHit2D Physisc2D::BoxCast(const glm::vec2& boxSize, const glm::vec2& origi
     b2Vec2 box2DDestination = { direction.x * distance, direction.y * distance };
 
     b2World_CastPolygon(s_Instance->m_PhysicsWorld, &box, box2DOrigin, box2DDestination, { raycastFilter.GetCollisionLayer(), raycastFilter.GetCollisionMask() }, fcn, &tempRayCastHit);
-    // b2World_PolygonCast(s_Instance->m_PhysicsWorld, &box, box2DOrigin, box2DDestination, { raycastFilter.GetCollisionLayer(), raycastFilter.GetCollisionMask() }, fcn, &tempRayCastHit);
 
     return tempRayCastHit;
 }
 
-RaycastHit2D Physisc2D::BoxCast(const glm::vec2& boxSize, const glm::vec2& origin, const glm::vec2& direction, float distance, RaycastFilter2D raycastFilter)
+RaycastHit2D Physisc2D::BoxCast(const Vector2& boxSize, const Vector2& origin, const Vector2& direction, float distance, RaycastFilter2D raycastFilter)
 {
     return BoxCast(boxSize, origin, direction, distance, RaycastFilter2D(), 0, std::numeric_limits<int>::max());
 }
 
-RaycastHit2D Physisc2D::BoxCast(const glm::vec2& boxSize, const glm::vec2& origin, const glm::vec2& direction, float distance)
+RaycastHit2D Physisc2D::BoxCast(const Vector2& boxSize, const Vector2& origin, const Vector2& direction, float distance)
 {
     return BoxCast(boxSize, origin, direction, distance, RaycastFilter2D(), 0, std::numeric_limits<int>::max());
 }
 
-RaycastHit2D Physisc2D::BoxCast(const glm::vec2& boxSize, const glm::vec2& origin, const glm::vec2& direction)
+RaycastHit2D Physisc2D::BoxCast(const Vector2& boxSize, const Vector2& origin, const Vector2& direction)
 {
     return BoxCast(boxSize, origin, direction, 2000.0f, RaycastFilter2D(), 0, std::numeric_limits<int>::max());
 }
 
-RaycastHit2D Physisc2D::CapsuleCast(const glm::vec2& point1, const glm::vec2& point2, float radius, const glm::vec2& origin, const glm::vec2& direction, float distance, RaycastFilter2D raycastFilter, int minDepth, int maxDepth)
+RaycastHit2D Physisc2D::CapsuleCast(const Vector2& point1, const Vector2& point2, float radius, const Vector2& origin, const Vector2& direction, float distance, RaycastFilter2D raycastFilter, int minDepth, int maxDepth)
 {
     RaycastHit2D tempRayCastHit;
 
@@ -157,27 +187,26 @@ RaycastHit2D Physisc2D::CapsuleCast(const glm::vec2& point1, const glm::vec2& po
     b2Vec2 box2DDestination = { direction.x * distance, direction.y * distance };
 
     b2World_CastCapsule(s_Instance->m_PhysicsWorld, &capsule, box2DOrigin, box2DDestination, { raycastFilter.GetCollisionLayer(), raycastFilter.GetCollisionMask() }, fcn, &tempRayCastHit);
-    // b2World_CapsuleCast(s_Instance->m_PhysicsWorld, &capsule, box2DOrigin, box2DDestination, { raycastFilter.GetCollisionLayer(), raycastFilter.GetCollisionMask() }, fcn, &tempRayCastHit);
 
     return tempRayCastHit;
 }
 
-RaycastHit2D Physisc2D::CapsuleCast(const glm::vec2& point1, const glm::vec2& point2, float radius, const glm::vec2& origin, const glm::vec2& direction, float distance, RaycastFilter2D raycastFilter)
+RaycastHit2D Physisc2D::CapsuleCast(const Vector2& point1, const Vector2& point2, float radius, const Vector2& origin, const Vector2& direction, float distance, RaycastFilter2D raycastFilter)
 {
     return CapsuleCast(point1, point2, radius, origin, direction, distance, RaycastFilter2D(), 0, std::numeric_limits<int>::max());
 }
 
-RaycastHit2D Physisc2D::CapsuleCast(const glm::vec2& point1, const glm::vec2& point2, float radius, const glm::vec2& origin, const glm::vec2& direction, float distance)
+RaycastHit2D Physisc2D::CapsuleCast(const Vector2& point1, const Vector2& point2, float radius, const Vector2& origin, const Vector2& direction, float distance)
 {
     return CapsuleCast(point1, point2, radius, origin, direction, distance, RaycastFilter2D(), 0, std::numeric_limits<int>::max());
 }
 
-RaycastHit2D Physisc2D::CapsuleCast(const glm::vec2& point1, const glm::vec2& point2, float radius, const glm::vec2& origin, const glm::vec2& direction)
+RaycastHit2D Physisc2D::CapsuleCast(const Vector2& point1, const Vector2& point2, float radius, const Vector2& origin, const Vector2& direction)
 {
     return CapsuleCast(point1, point2, radius, origin, direction, 2000.0f, RaycastFilter2D(), 0, std::numeric_limits<int>::max());
 }
 
-RaycastHit2D Physisc2D::CircleCast(float radius, const glm::vec2& origin, const glm::vec2& direction, float distance, RaycastFilter2D raycastFilter, int minDepth, int maxDepth)
+RaycastHit2D Physisc2D::CircleCast(float radius, const Vector2& origin, const Vector2& direction, float distance, RaycastFilter2D raycastFilter, int minDepth, int maxDepth)
 {
     RaycastHit2D tempRayCastHit;
 
@@ -191,22 +220,21 @@ RaycastHit2D Physisc2D::CircleCast(float radius, const glm::vec2& origin, const 
     b2Vec2 box2DDestination = { direction.x * distance, direction.y * distance };
 
     b2World_CastCircle(s_Instance->m_PhysicsWorld, &circle, box2DOrigin, box2DDestination, { raycastFilter.GetCollisionLayer(), raycastFilter.GetCollisionMask() }, fcn, &tempRayCastHit);
-    // b2World_CircleCast(s_Instance->m_PhysicsWorld, &circle, box2DOrigin, box2DDestination, { raycastFilter.GetCollisionLayer(), raycastFilter.GetCollisionMask() }, fcn, &tempRayCastHit);
 
     return tempRayCastHit;
 }
 
-RaycastHit2D Physisc2D::CircleCast(float radius, const glm::vec2& origin, const glm::vec2& direction, float distance, RaycastFilter2D raycastFilter)
+RaycastHit2D Physisc2D::CircleCast(float radius, const Vector2& origin, const Vector2& direction, float distance, RaycastFilter2D raycastFilter)
 {
     return CircleCast(radius, origin, direction, distance, RaycastFilter2D(), 0, std::numeric_limits<int>::max());
 }
 
-RaycastHit2D Physisc2D::CircleCast(float radius, const glm::vec2& origin, const glm::vec2& direction, float distance)
+RaycastHit2D Physisc2D::CircleCast(float radius, const Vector2& origin, const Vector2& direction, float distance)
 {
     return CircleCast(radius, origin, direction, distance, RaycastFilter2D(), 0, std::numeric_limits<int>::max());
 }
 
-RaycastHit2D Physisc2D::CircleCast(float radius, const glm::vec2& origin, const glm::vec2& direction)
+RaycastHit2D Physisc2D::CircleCast(float radius, const Vector2& origin, const Vector2& direction)
 {
     return CircleCast(radius, origin, direction, 2000.0f, RaycastFilter2D(), 0, std::numeric_limits<int>::max());
 }
@@ -497,6 +525,8 @@ void Physisc2D::ProcessEvents()
     for (int i = 0; i < contactEvents.beginCount; ++i) {
         b2ContactBeginTouchEvent event = contactEvents.beginEvents[i];
 
+        // TODO: A way to recieve/process callbacks
+
         // --- Process Begin Touch Event -----------------
         b2BodyId bodyIdA = b2Shape_GetBody(event.shapeIdA);
         b2BodyId bodyIdB = b2Shape_GetBody(event.shapeIdB);
@@ -504,41 +534,31 @@ void Physisc2D::ProcessEvents()
         BodyUserData2D* userDataA = static_cast<BodyUserData2D*>(b2Body_GetUserData(bodyIdA));
         BodyUserData2D* userDataB = static_cast<BodyUserData2D*>(b2Body_GetUserData(bodyIdB));
 
-        // if (userDataA->bodyEntity.HasComponent<NativeScriptComponent>()) {
-        //     auto& nsc = userDataA->bodyEntity.GetComponent<NativeScriptComponent>();
-        //
-        //     // If entity has NativeScriptComponent it will call its OnCollisionEnter
-        //     ContactCallback callbackA;
-        //     callbackA.entity = userDataB->bodyEntity;
-        //     callbackA.transform = &userDataB->bodyEntity.GetComponent<TransformComponent>();
-        //     callbackA.rigidbody = &userDataB->bodyEntity.GetComponent<Rigidbody2DComponent>();
-        //
-        //     if (!nsc.Instance) {
-        //         nsc.Instance = nsc.InstantiateScript();
-        //         nsc.Instance->m_Entity = userDataA->bodyEntity;
-        //         nsc.Instance->OnCreate();
-        //     }
-        //     nsc.Instance->OnCollisionEnter(callbackA);
-        // }
-        //
-        // if (userDataB->bodyEntity.HasComponent<NativeScriptComponent>()) {
-        //     auto& nsc = userDataB->bodyEntity.GetComponent<NativeScriptComponent>();
-        //
-        //     // If entity has NativeScriptComponent it will call its OnCollisionEnter
-        //     ContactCallback callbackB;
-        //     callbackB.entity = userDataA->bodyEntity;
-        //     callbackB.transform = &userDataA->bodyEntity.GetComponent<TransformComponent>();
-        //     callbackB.rigidbody = &userDataA->bodyEntity.GetComponent<Rigidbody2DComponent>();
-        //
-        //     if (!nsc.Instance) {
-        //         nsc.Instance = nsc.InstantiateScript();
-        //         nsc.Instance->m_Entity = userDataB->bodyEntity;
-        //         nsc.Instance->OnCreate();
-        //     }
-        //     nsc.Instance->OnCollisionEnter(callbackB);
-        // }
+        if (userDataA->bodyEntity.HasComponent<Rigidbody2DComponent>()) {
+            auto& rb = userDataA->bodyEntity.GetComponent<Rigidbody2DComponent>();
 
-        // ----------------------------------------------
+            ContactCallback callbackA;
+            callbackA.entity = userDataB->bodyEntity;
+            callbackA.transform = &userDataB->bodyEntity.GetComponent<TransformComponent>();
+            callbackA.rigidbody = &userDataB->bodyEntity.GetComponent<Rigidbody2DComponent>();
+
+            if (rb.OnCollisionEnterCallback) {
+                rb.OnCollisionEnterCallback(callbackA);
+            }
+        }
+
+        if (userDataB->bodyEntity.HasComponent<Rigidbody2DComponent>()) {
+            auto& rb = userDataB->bodyEntity.GetComponent<Rigidbody2DComponent>();
+
+            ContactCallback callbackB;
+            callbackB.entity = userDataA->bodyEntity;
+            callbackB.transform = &userDataA->bodyEntity.GetComponent<TransformComponent>();
+            callbackB.rigidbody = &userDataA->bodyEntity.GetComponent<Rigidbody2DComponent>();
+
+            if (rb.OnCollisionEnterCallback) {
+                rb.OnCollisionEnterCallback(callbackB);
+            }
+        }
     }
 
     for (int i = 0; i < contactEvents.endCount; ++i) {
@@ -551,42 +571,71 @@ void Physisc2D::ProcessEvents()
         BodyUserData2D* userDataA = static_cast<BodyUserData2D*>(b2Body_GetUserData(bodyIdA));
         BodyUserData2D* userDataB = static_cast<BodyUserData2D*>(b2Body_GetUserData(bodyIdB));
 
-        // if (userDataA->bodyEntity.HasComponent<NativeScriptComponent>()) {
-        //     auto& nsc = userDataA->bodyEntity.GetComponent<NativeScriptComponent>();
-        //
-        //     // If entity has NativeScriptComponent it will call its OnCollisionExit
-        //     ContactCallback callbackA;
-        //     callbackA.entity = userDataB->bodyEntity;
-        //     callbackA.transform = &userDataB->bodyEntity.GetComponent<TransformComponent>();
-        //     callbackA.rigidbody = &userDataB->bodyEntity.GetComponent<Rigidbody2DComponent>();
-        //
-        //     if (!nsc.Instance) {
-        //         nsc.Instance = nsc.InstantiateScript();
-        //         nsc.Instance->m_Entity = userDataA->bodyEntity;
-        //         nsc.Instance->OnCreate();
-        //     }
-        //     nsc.Instance->OnCollisionExit(callbackA);
-        // }
-        //
-        // if (userDataB->bodyEntity.HasComponent<NativeScriptComponent>()) {
-        //     auto& nsc = userDataB->bodyEntity.GetComponent<NativeScriptComponent>();
-        //
-        //     // If entity has NativeScriptComponent it will call its OnCollisionExit
-        //     ContactCallback callbackB;
-        //     callbackB.entity = userDataA->bodyEntity;
-        //     callbackB.transform = &userDataA->bodyEntity.GetComponent<TransformComponent>();
-        //     callbackB.rigidbody = &userDataA->bodyEntity.GetComponent<Rigidbody2DComponent>();
-        //
-        //     if (!nsc.Instance) {
-        //         nsc.Instance = nsc.InstantiateScript();
-        //         nsc.Instance->m_Entity = userDataB->bodyEntity;
-        //         nsc.Instance->OnCreate();
-        //     }
-        //     nsc.Instance->OnCollisionExit(callbackB);
-        // }
+        if (userDataA->bodyEntity.HasComponent<Rigidbody2DComponent>()) {
+            auto& rb = userDataA->bodyEntity.GetComponent<Rigidbody2DComponent>();
 
+            ContactCallback callbackA;
+            callbackA.entity = userDataB->bodyEntity;
+            callbackA.transform = &userDataB->bodyEntity.GetComponent<TransformComponent>();
+            callbackA.rigidbody = &userDataB->bodyEntity.GetComponent<Rigidbody2DComponent>();
+
+            if (rb.OnCollisionExitCallback) {
+                rb.OnCollisionExitCallback(callbackA);
+            }
+        }
+
+        if (userDataB->bodyEntity.HasComponent<Rigidbody2DComponent>()) {
+            auto& rb = userDataB->bodyEntity.GetComponent<Rigidbody2DComponent>();
+
+            ContactCallback callbackB;
+            callbackB.entity = userDataA->bodyEntity;
+            callbackB.transform = &userDataA->bodyEntity.GetComponent<TransformComponent>();
+            callbackB.rigidbody = &userDataA->bodyEntity.GetComponent<Rigidbody2DComponent>();
+
+            if (rb.OnCollisionExitCallback) {
+                rb.OnCollisionExitCallback(callbackB);
+            }
+        }
         // ----------------------------------------------
     }
 }
+bool Physics2DPreSolve(b2ShapeId shapeIdA, b2ShapeId shapeIdB, b2Manifold* manifold, void* context)
+{
+    TB_CORE_ASSERT_TAGGED(b2Shape_IsValid(shapeIdA), "Shape is null!");
+    TB_CORE_ASSERT_TAGGED(b2Shape_IsValid(shapeIdB), "Shape is null!");
 
+    b2BodyId bodyIdA = b2Shape_GetBody(shapeIdA);
+    b2BodyId bodyIdB = b2Shape_GetBody(shapeIdB);
+
+    BodyUserData2D* userDataA = static_cast<BodyUserData2D*>(b2Body_GetUserData(bodyIdA));
+    BodyUserData2D* userDataB = static_cast<BodyUserData2D*>(b2Body_GetUserData(bodyIdB));
+
+    if (userDataA->bodyEntity.HasComponent<Rigidbody2DComponent>()) {
+        auto& rb = userDataA->bodyEntity.GetComponent<Rigidbody2DComponent>();
+
+        ContactCallback callbackA;
+        callbackA.entity = userDataB->bodyEntity;
+        callbackA.transform = &userDataB->bodyEntity.GetComponent<TransformComponent>();
+        callbackA.rigidbody = &userDataB->bodyEntity.GetComponent<Rigidbody2DComponent>();
+
+        if (rb.OnPreSolve) {
+            return rb.OnPreSolve(callbackA);
+        }
+    }
+
+    if (userDataB->bodyEntity.HasComponent<Rigidbody2DComponent>()) {
+        auto& rb = userDataB->bodyEntity.GetComponent<Rigidbody2DComponent>();
+
+        ContactCallback callbackB;
+        callbackB.entity = userDataA->bodyEntity;
+        callbackB.transform = &userDataA->bodyEntity.GetComponent<TransformComponent>();
+        callbackB.rigidbody = &userDataA->bodyEntity.GetComponent<Rigidbody2DComponent>();
+
+        if (rb.OnPreSolve) {
+            return rb.OnPreSolve(callbackB);
+        }
+    }
+
+    return true;
+}
 }

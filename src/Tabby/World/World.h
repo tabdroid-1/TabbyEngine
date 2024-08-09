@@ -30,14 +30,31 @@ enum Schedule : uint8_t {
     Draw,
 };
 
+// this need to be defined by user.
+void vWorldHandleEntityDeletion(Entity entity);
+
 class World {
 
 public:
     World();
 
-    static void Init();
-
     static void AddSystem(Schedule schedule, const std::function<void(entt::registry&)>& function);
+
+    template <typename T, typename... Args>
+    static T& AddResource(Args&&... args)
+    {
+        T resource { std::forward<Args>(args)... };
+        s_Instance->m_Resources[typeid(T)] = resource;
+        return std::any_cast<T&>(s_Instance->m_Resources[typeid(T)]);
+    }
+
+    template <typename T>
+    static T& GetResource()
+    {
+        TB_CORE_VERIFY_TAGGED(s_Instance->m_Resources.find(typeid(T)) != s_Instance->m_Resources.end(), "Resource not found!");
+
+        return std::any_cast<T&>(s_Instance->m_Resources.at(typeid(T)));
+    }
 
     static Entity CreateEntity(const std::string& name = std::string());
     static Entity CreateEntityWithUUID(UUID uuid, const std::string& name = std::string());
@@ -77,6 +94,8 @@ public:
     static void SetCurrentCamera(Camera* currentCamera, Matrix4* currentCameraTransform);
 
 private:
+    static void Init();
+
     template <typename T>
     static void OnComponentAdded(Entity entity, T& component);
 
@@ -93,6 +112,8 @@ private:
 
     inline static entt::registry m_EntityRegistry;
     std::unordered_map<UUID, entt::entity> m_EntityMap;
+
+    std::unordered_map<std::type_index, std::any> m_Resources;
 
     // Called onece on application startup
     std::vector<std::function<void(entt::registry&)>> m_PreStartupSystems;
